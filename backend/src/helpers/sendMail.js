@@ -14,7 +14,7 @@ const sendMailToRegister = (userMail, token, nombre) => {
             <p>Hola ${nombre || ""}, gracias por registrarte en nuestra cafetería.</p>
             <p>Para comenzar a disfrutar de nuestros productos y beneficios exclusivos, confirma tu cuenta haciendo clic en el siguiente botón:</p>
             
-            <a href="${process.env.URL_FRONTEND}confirm/${token}"
+            <a href="${process.env.URL_FRONTEND}confirmar/${token}"
                 style="display:inline-block; padding:10px 20px; background-color:#6b4226; color:white; text-decoration:none; border-radius:5px;">
                 Confirmar cuenta
             </a>

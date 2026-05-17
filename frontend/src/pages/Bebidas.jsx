@@ -1,30 +1,34 @@
 // ── Datos ──────────────────────────────────────────────────────────────────
 const BEBIDAS = [
     {
+        tag:     "Intenso & Aromático",
         title:   "CAFÉS TRADICIONALES",
-        desc:    "Desde el intenso espresso hasta el suave americano, disfruta de la esencia pura del grano tostado a la perfección por nuestros baristas expertos. Seleccionamos granos de origen único para garantizar un perfil de sabor inigualable en cada taza.",
+        desc:    "Desde el intenso espresso, pasando por el cremoso cappuccino, hasta el suave americano. Cada taza se elabora con dedicación y técnica, resaltando aromas y sabores.",
         img:     "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80",
         alt:     "Taza de café humeante",
         reverse: false,
-    },
+    },   
     {
-        title:   "MILKSHAKES",
-        desc:    "Batidos cremosos e irresistibles con los sabores más dulces, perfectos para cualquier momento del día. Coronados con crema batida artesanal y toppings seleccionados que elevan el sabor a otro nivel.",
-        img:     "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=800&q=80",
-        alt:     "Milkshake cremoso con toppings",
+        tag:     "Cremoso & Reconfortante",
+        title:   "COCHOLATE CALIENTE",
+        desc:    "Deléitate con una taza de chocolate caliente, preparados con auténtico chocolate de tableta. Una bebida reconfortante que envuelve el paladar con su sabor profundo y tradicional, perfecta para disfrutar cada sorbo.",
+        img:     "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?w=800&q=80",
+        alt:     "Chocolate caliente",
         reverse: true,
     },
     {
-        title:   "COCOA",
-        desc:    "Deléitate con nuestra selección de chocolates calientes y fríos, elaborados con el cacao más fino de la región. Una experiencia reconfortante y rica en antioxidantes que abraza el paladar.",
-        img:     "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?w=800&q=80",
-        alt:     "Chocolate caliente con malvaviscos",
+        tag:     "Refrescante & tropical",
+        title:   "BEBIDAS FRÍAS",
+        desc:    "Refresca tu día con nuestra selección de bebidas frías, desde jugos naturales y batidos hasta irresistibles milkshakes. Preparadas al momento, cada opción combina frescura, sabor y una textura deliciosa.",
+        img:     "https://images.unsplash.com/photo-1583577612013-4fecf7bf8f13?q=80&w=966&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        alt:     "Milkshake cremoso con toppings",
         reverse: false,
     },
     {
-        title:   "FRAPPELATES Y LATTES",
-        desc:    "La combinación perfecta entre la intensidad del espresso y la suavidad de la leche vaporizada o frappé. Desde el clásico latte art hasta creaciones heladas con caramelo y vainilla.",
-        img:     "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=800&q=80",
+        tag:     "Clásico & Social",
+        title:   "BEBIDAS ALCOCHOLICAS",
+        desc:    "Disfruta nuestra selección de bebidas alcohólicas, desde la refrescante sangría hasta el vino hervido y la clásica cerveza, perfectas para acompañar y compartir buenos momentos.",
+        img:     "https://plus.unsplash.com/premium_photo-1720776590072-c091c8dad645?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         alt:     "Frappé de café helado",
         reverse: true,
     },
@@ -56,13 +60,16 @@ export function Bebidas() {
 
                     {/* Texto */}
                     <div className="flex-1 space-y-6">
-                    <h2 className="text-primary text-4xl font-bold leading-tight">{b.title}</h2>
-                    <p className="text-[#8c815f] text-lg leading-relaxed">{b.desc}</p>
+                        <div className="inline-block px-3 py-1 bg-secondary/20 text-[#181611] rounded-full text-xs font-bold uppercase tracking-widest">
+                        {b.tag}
+                        </div>
+                        <h2 className="text-primary text-4xl font-bold leading-tight">{b.title}</h2>
+                        <p className="text-[#8c815f] text-lg leading-relaxed">{b.desc}</p>
                     </div>
 
                     {/* Imagen */}
                     <div className="flex-1 w-full">
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
+                    <div className="aspect-4/3 rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
                         <img src={b.img} alt={b.alt} className="w-full h-full object-cover" />
                     </div>
                     </div>

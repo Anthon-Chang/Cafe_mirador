@@ -4,36 +4,36 @@ import { Link } from "react-router-dom"
 const CATEGORIES = [
     {
         title:   "Bebidas",
-        desc:    "Descubre nuestra selección artesanal de cafés. Desde el tradicional espresso con notas intensas hasta nuestros cremosos milkshakes que combinan texturas suaves y sabores refrescantes.",
+        desc:    "Descubre nuestra selección de bebidas calientes y frías. Desde opciones reconfortantes hasta refrescantes, cada sorbo está preparado para acompañarte y hacer de tu experiencia algo especial.",
         to:      "/bebidas",
         btn:     "Ver Bebidas",
-        img:     "https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=800&q=80",
+        img:     "https://plus.unsplash.com/premium_photo-1755520880464-fe32ef3efedb?q=80&w=1246&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         imgAlt:  "Latte artesanal",
         reverse: false,
     },
     {
-        title:   "Productos de Vitrina",
-        desc:    "Nuestra repostería sigue recetas tradicionales cargadas de dulzura. Croissants hojaldrados, pasteles artesanales y bocados dulces preparados cada mañana para acompañar tu momento ideal.",
+        title:   "Tradicionales",
+        desc:    "En nuestra selección de tradicionales, celebramos sabores que evocan hogar y memorias. Cada bocado, hecho con cariño y autenticidad, te invita a disfrutar lo simple y verdaderamente especial.",
         to:      "/tradicionales",
-        btn:     "Ver Dulces",
-        img:     "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80",
+        btn:     "Ver Tradicionales",
+        img:     "https://images.unsplash.com/photo-1609525313344-a56b96f20718?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
         imgAlt:  "Pasteles artesanales",
         reverse: true,
     },
     {
-        title:   "Nutricional",
-        desc:    "Equilibrio y sabor en cada bocado. Explora nuestras opciones saludables, bowls de frutas y preparaciones bajas en calorías diseñadas para quienes buscan bienestar sin renunciar al placer.",
-        to:      "/nutricional",
-        btn:     "Ver Opciones Saludables",
-        img:     "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80",
-        imgAlt:  "Bowl saludable",
+        title:   "Especialidades",
+        desc:    "En nuestras especialidades encontrarás combinaciones irresistibles pensadas para disfrutar sin prisa. Preparados al momento y con ese toque casero que convierte cada elección en una experiencia deliciosa.”",
+        to:      "/comidas",
+        btn:     "Ver Especialidades",
+        img:     "https://plus.unsplash.com/premium_photo-1667807521536-bc35c8d8b64b?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+        imgAlt:  "especialidades",
         reverse: false,
     },
     {
         title:   "Heladería",
-        desc:    "Deléitate con nuestros helados artesanales, elaborados con ingredientes frescos y sabores innovadores. Desde clásicos como vainilla y chocolate hasta creaciones únicas que cambian según la temporada.",
+        desc:    "En nuestra heladería, cada opción es un pequeño antojo hecho realidad. Desde preparaciones artesanales hasta combinaciones irresistibles, encontrarás sabores frescos y texturas que invitan a disfrutar, compartir y dejarte llevar por lo dulce.",
         to:      "/heladeria",
-        btn:     "Ver Helados",
+        btn:     "Ver Heladería",
         img:     "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=800&q=80",
         imgAlt:  "Helados artesanales",
         reverse: true,
@@ -66,7 +66,7 @@ const CATEGORIES = [
 
             {/* Imagen */}
             <div className={cat.reverse ? "order-1" : "order-1 lg:order-2"}>
-                <div className="relative aspect-[16/10] lg:aspect-square rounded-xl overflow-hidden shadow-2xl">
+                <div className="relative aspect-16/10 lg:aspect-square rounded-xl overflow-hidden shadow-2xl">
                 <img src={cat.img} alt={cat.imgAlt}
                     className="w-full h-full object-cover" />
                 </div>

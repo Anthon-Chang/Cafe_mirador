@@ -61,7 +61,7 @@
 
                 {/* Imagen */}
                 <div className="flex-1 w-full">
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
+                    <div className="aspect-4/3 rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
                     <img src={b.img} alt={b.alt} className="w-full h-full object-cover" />
                     </div>
                 </div>

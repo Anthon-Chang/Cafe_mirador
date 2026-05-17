@@ -1,27 +1,19 @@
 const PLATOS = [
     {
-        tag:     "LIGHT & FRESH",
-        title:   "OPCIONES LIGHT",
-        desc:    "Nuestras recetas bajas en calorías están diseñadas para nutrir tu cuerpo sin comprometer el sabor. Disfruta de ingredientes frescos y naturales seleccionados cuidadosamente para mantener tu energía durante todo el día.",
+        tag:     "JUGOSA & SABROSA",
+        title:   "HAMBURGUESAS",
+        desc:    "Nuestras hamburguesas son puro placer en cada bocado. Con ingredientes de alta calidad, combinan sabores intensos y jugosos que las hacen simplemente irresistibles.",
         img:     "https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80",
         alt:     "Bowl de frutas frescas",
         reverse: false,
     },
     {
-        tag:     "FITNESS & PROTEIN",
-        title:   "FITNESS & PROTEIN",
-        desc:    "Potencia tus entrenamientos con snacks enriquecidos con proteínas y batidos revitalizantes. La combinación perfecta de macronutrientes esenciales para la recuperación muscular y un rendimiento óptimo.",
+        tag:     "SALUDABLE & NUTRITIVA",
+        title:   "OMELETTES",
+        desc:    "Nuestros omelettes son la opción perfecta para quienes buscan una comida saludable y deliciosa. Con ingredientes frescos y nutritivos, cada bocado es una explosión de sabor que te mantendrá lleno de energía durante todo el día.",
         img:     "https://images.unsplash.com/photo-1502741224143-90386d7f8c82?w=800&q=80",
         alt:     "Batido verde proteico",
         reverse: true,
-    },
-    {
-        tag:     "VEGAN & GLUTEN FREE",
-        title:   "VEGAN & GLUTEN FREE",
-        desc:    "Creemos en una gastronomía inclusiva. Descubre nuestra repostería artesanal vegana y opciones libres de gluten, preparadas con harinas alternativas y endulzantes naturales para que todos puedan disfrutar.",
-        img:     "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80",
-        alt:     "Galletas veganas artesanales",
-        reverse: false,
     },
     ]
 
@@ -61,7 +53,7 @@ const PLATOS = [
 
                     {/* Imagen */}
                     <div className="flex-1 w-full">
-                        <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
+                        <div className="aspect-4/3 rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
                         <img src={b.img} alt={b.alt} className="w-full h-full object-cover" />
                         </div>
                     </div>

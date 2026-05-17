@@ -1,26 +1,26 @@
     const PRODUCTOS = [
     {
-        tag:     "Clásicos",
-        title:   "DULCES",
-        desc:    "Nuestra selección de dulces está inspirada en recetas tradicionales cargadas de historia y dulzura. Desde cupcakes artesanales con frosting de seda hasta pequeños bocados llenos de sabor, cada pieza es una obra de arte preparada con ingredientes de la más alta calidad.",
+        tag:     "tradicion & sabor",
+        title:   "EMPANADAS",
+        desc:    "Nuestra selección de empanadas está inspirada en recetas tradicionales cargadas de historia y sabor. Desde empanadas de viento hasta empanadas de morocho.",
         img:     "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=800&q=80",
         alt:     "Cupcakes artesanales",
         reverse: false,
     },
     {
-        tag:     "Gourmet",
-        title:   "SAL",
-        desc:    "Para quienes prefieren un contraste, nuestra sección de sal ofrece opciones gourmet preparadas al momento. Sandwiches artesanales con pan de masa madre, quiches de temporada y bocadillos salados que elevan tu experiencia de brunch.",
+        tag:     "Auténtico & Casero",
+        title:   "HUMITAS & QUIMBOLITOS",
+        desc:    "Disfruta de nuestras humitas y quimbolitos, preparaciones suaves y llenas de tradición que conquistan con su textura delicada y su sabor reconfortante. Son el acompañante perfecto para un momento cálido y especial.",
         img:     "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&q=80",
-        alt:     "Sandwiches artesanales",
+        alt:     "Humitas y quimbolitos",
         reverse: true,
     },
     {
-        tag:     "Premium",
-        title:   "REPOSTERÍA ARTESANAL",
-        desc:    "Descubre nuestra repostería premium donde el sabor se une con la técnica. Pasteles de diseño, cheesecakes de textura inigualable y creaciones exclusivas que capturan la esencia de la pastelería moderna con un toque hogareño.",
-        img:     "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=800&q=80",
-        alt:     "Cheesecake artesanal",
+        tag:     "delicia & tradición",
+        title:   "Sanduches",
+        desc:    "Nuestros sándwiches artesanales son una experiencia culinaria que combina ingredientes frescos y de alta calidad con recetas cuidadosamente elaboradas. Cada bocado es una explosión de sabores, desde combinaciones clásicas hasta creaciones innovadoras, diseñadas para satisfacer los paladares más exigentes.",
+        img:     "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=800&q=80",
+        alt:     "Sandwiches artesanales",
         reverse: false,
     },
     ]
@@ -61,7 +61,7 @@
 
                 {/* Imagen */}
                 <div className="flex-1 w-full">
-                    <div className="aspect-[4/3] rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
+                    <div className="aspect-4/3 rounded-xl overflow-hidden shadow-2xl transition-transform hover:scale-[1.02] duration-500">
                     <img src={b.img} alt={b.alt} className="w-full h-full object-cover" />
                     </div>
                 </div>

@@ -3,40 +3,47 @@ import { crearTokenJWT } from "../middlewares/JWT.js"
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../helpers/sendMail.js"
 
 // =====================================
-// 1️⃣ REGISTRO PÚBLICO (CLIENTE)
+// 1️⃣ REGISTRO PÚBLICO (CLIENTE MANUAL)
 // =====================================
 const registerPublic = async (req, res) => {
-    
     try {
-        const { nombre, apellido, email, password } = req.body
+        const { nombre, apellido, email, password, cedula, celular, direccion } = req.body
 
-        if (!nombre || !apellido || !email || !password)
+        // Validar campos obligatorios
+        if (!nombre || !apellido || !email || !password || !cedula || !celular || !direccion)
             return res.status(400).json({ msg: "Todos los campos son obligatorios" })
 
+        // Verificar email duplicado
         const existeEmail = await Usuario.findOne({ email: email.toLowerCase() })
         if (existeEmail)
             return res.status(400).json({ msg: "El email ya está registrado" })
 
+        // Verificar cédula duplicada
+        const existeCedula = await Usuario.findOne({ cedula })
+        if (existeCedula)
+            return res.status(400).json({ msg: "La cédula ya está registrada" })
+
         const nuevoUsuario = new Usuario({
             nombre,
             apellido,
-            email: email.toLowerCase(),
+            email:    email.toLowerCase(),
             password,
+            cedula,
+            celular,
+            direccion,
             rol: "cliente"
         })
 
         const token = nuevoUsuario.generarToken()
 
         await nuevoUsuario.save()
-        await sendMailToRegister(email, token)
+        await sendMailToRegister(email, token, nuevoUsuario.nombre)
 
         res.status(201).json({ msg: "Revisa tu correo para confirmar tu cuenta" })
 
     } catch (error) {
         console.log("ERROR REAL:", error)
-        res.status(500).json({ 
-            msg: `Error del servidor - ${error.message}` 
-        })
+        res.status(500).json({ msg: `Error del servidor - ${error.message}` })
     }
 }
 
@@ -91,16 +98,17 @@ const login = async (req, res) => {
 
         const token = crearTokenJWT(usuario._id, usuario.rol)
 
+        // perfilIncompleto solo aplica para usuarios que entraron con Google
         const perfilIncompleto = !usuario.cedula || !usuario.celular || !usuario.direccion
 
         res.status(200).json({
             token,
             usuario: {
-                _id: usuario._id,
-                nombre: usuario.nombre,
-                apellido: usuario.apellido,
-                email: usuario.email,
-                rol: usuario.rol,
+                _id:             usuario._id,
+                nombre:          usuario.nombre,
+                apellido:        usuario.apellido,
+                email:           usuario.email,
+                rol:             usuario.rol,
                 perfilIncompleto
             }
         })
@@ -125,7 +133,7 @@ const recoverPassword = async (req, res) => {
         if (!usuario)
             return res.status(404).json({ msg: "Usuario no encontrado" })
 
-        const token = usuario.generarToken()  // Genera un nuevo token para recuperación
+        const token = usuario.generarToken()
 
         await usuario.save()
         await sendMailToRecoveryPassword(email, token)
@@ -156,7 +164,7 @@ const newPassword = async (req, res) => {
         if (!usuario)
             return res.status(404).json({ msg: "Token inválido" })
 
-        usuario.password = password  // Se cifra automáticamente
+        usuario.password = password
         usuario.token = null
 
         await usuario.save()

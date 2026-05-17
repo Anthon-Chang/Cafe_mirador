@@ -11,6 +11,7 @@ import { Bebidas } from "./pages/Bebidas.jsx"
 import { Tradicionales } from "./pages/Tradicionales.jsx"
 import { Comidas } from "./pages/Comidas.jsx"
 import { Heladeria } from "./pages/Heladeria.jsx"
+import { ConfirmEmail } from "./pages/ConfirmEmail.jsx"
 
 function App() {
   return (
@@ -30,6 +31,11 @@ function App() {
         {/* Páginas SIN header y footer */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/confirmar/:token" element={<ConfirmEmail />} />
+
+        {/* 🔐 Rutas privadas (por crear) */}
+        {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
+        {/* <Route path="/empleado/dashboard" element={<EmpleadoDashboard />} /> */}
 
         <Route path="*" element={<NotFound />} />
 
