@@ -41,7 +41,7 @@ export function Header() {
             <Link to="/" className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-l overflow-hidden flex items-center justify-center">
                 <img
-                    src="/logo.jpg"
+                    src="/logo1.png"
                     alt="Logo Café Mirador"
                     className="w-full h-full object-contain"
                 />

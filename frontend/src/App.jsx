@@ -1,47 +1,66 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 
-import { MainLayout } from "./layout/MainLayout.jsx"
+// Contexto
+import { AuthProvider } from "./context/AuthProvider"
 
-import { Home } from "./pages/Home.jsx"
-import Login from "./pages/Login.jsx"
-import { Register } from "./pages/Register.jsx"
-import { NotFound } from "./pages/NotFound.jsx"
-import { Menu } from "./pages/Menu.jsx"
-import { Bebidas } from "./pages/Bebidas.jsx"
-import { Tradicionales } from "./pages/Tradicionales.jsx"
-import { Comidas } from "./pages/Comidas.jsx"
-import { Heladeria } from "./pages/Heladeria.jsx"
-import { ConfirmEmail } from "./pages/ConfirmEmail.jsx"
+// Layouts
+import { MainLayout }      from "./layout/MainLayout"
+import { DashboardLayout } from "./layout/DashboardLayout"
+
+// Páginas públicas
+import { Home }         from "./pages/Home"
+import Login            from "./pages/Login"
+import { Register }     from "./pages/Register"
+import { NotFound }     from "./pages/NotFound"
+import { Menu }         from "./pages/Menu"
+import { Bebidas }      from "./pages/Bebidas"
+import { Tradicionales } from "./pages/Tradicionales"
+import { Comidas }      from "./pages/Comidas"
+import { Heladeria }    from "./pages/Heladeria"
+import { ConfirmEmail } from "./pages/ConfirmEmail"
+
+// Páginas admin
+import DashboardPage    from "./pages/admin/DashboardPage"
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
+    return (
+        <BrowserRouter>
+            {/* AuthProvider envuelve todo para que cualquier componente acceda al usuario */}
+            <AuthProvider>
+                <Routes>
 
-        {/* Páginas CON header y footer */}
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/menu" element={<Menu />} />
-          <Route path="/bebidas" element={<Bebidas />} />
-          <Route path="/tradicionales" element={<Tradicionales />} />
-          <Route path="/comidas" element={<Comidas />} />
-          <Route path="/heladeria" element={<Heladeria />} />
-        </Route>
+                    {/* ── Páginas públicas con Header/Footer ── */}
+                    <Route element={<MainLayout />}>
+                        <Route path="/"              element={<Home />}         />
+                        <Route path="/menu"           element={<Menu />}         />
+                        <Route path="/bebidas"        element={<Bebidas />}      />
+                        <Route path="/tradicionales"  element={<Tradicionales />}/>
+                        <Route path="/comidas"        element={<Comidas />}      />
+                        <Route path="/heladeria"      element={<Heladeria />}    />
+                    </Route>
 
-        {/* Páginas SIN header y footer */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/confirmar/:token" element={<ConfirmEmail />} />
+                    {/* ── Páginas sin layout ── */}
+                    <Route path="/login"              element={<Login />}        />
+                    <Route path="/register"           element={<Register />}     />
+                    <Route path="/confirmar/:token"   element={<ConfirmEmail />} />
 
-        {/* 🔐 Rutas privadas (por crear) */}
-        {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
-        {/* <Route path="/empleado/dashboard" element={<EmpleadoDashboard />} /> */}
+                    {/* ── Panel admin con DashboardLayout ── */}
+                    <Route path="/admin" element={<DashboardLayout />}>
+                        <Route path="dashboard"  element={<DashboardPage />} />
+                        {/* Aquí irán las nuevas páginas del admin:
+                        <Route path="pedidos"    element={<PedidosPage />}   />
+                        <Route path="venta"      element={<VentaPage />}     />
+                        <Route path="menu"       element={<MenuPage />}      />
+                        <Route path="analiticas" element={<AnaliticasPage />}/>
+                        <Route path="perfil"     element={<PerfilPage />}    /> */}
+                    </Route>
 
-        <Route path="*" element={<NotFound />} />
+                    <Route path="*" element={<NotFound />} />
 
-      </Routes>
-    </BrowserRouter>
-  )
+                </Routes>
+            </AuthProvider>
+        </BrowserRouter>
+    )
 }
 
 export default App

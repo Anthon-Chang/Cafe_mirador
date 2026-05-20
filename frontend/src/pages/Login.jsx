@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { FiLock, FiEye, FiEyeOff, FiMail } from "react-icons/fi"
-import { loginUser } from "../services/authService"
+import { useAuth } from "../context/useAuth"
+
+const ROLES_ADMIN = ["superadmin", "administrador", "supervisor", "trabajador"]
 
 export default function Login() {
     const [showPassword, setShowPassword] = useState(false)
@@ -9,6 +11,7 @@ export default function Login() {
     const [loading, setLoading]           = useState(false)
     const [error, setError]               = useState("")
     const navigate                        = useNavigate()
+    const { login }                       = useAuth()
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target
@@ -21,24 +24,13 @@ export default function Login() {
         setError("")
 
         try {
-            const { token, usuario } = await loginUser(formData)
-
-            // Guardar token y usuario según "Recuérdame"
-            if (formData.remember) {
-                localStorage.setItem("token", token)
-                localStorage.setItem("usuario", JSON.stringify(usuario))
-            } else {
-                sessionStorage.setItem("token", token)
-                sessionStorage.setItem("usuario", JSON.stringify(usuario))
-            }
+            const { usuario } = await login(formData.email, formData.password, formData.remember)
 
             // Redirigir según rol
-            if (usuario.rol === "admin") {
+            if (ROLES_ADMIN.includes(usuario.rol)) {
                 navigate("/admin/dashboard")
-            } else if (usuario.rol === "empleado") {
-                navigate("/empleado/dashboard")
             } else {
-                navigate("/") // cliente → home por ahora
+                navigate("/")
             }
 
         } catch (err) {

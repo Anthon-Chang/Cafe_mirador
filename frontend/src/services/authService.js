@@ -1,37 +1,27 @@
-const API_URL = import.meta.env.VITE_API_URL
+import { apiFetch } from "./api"
 
-// ── LOGIN ─────────────────────────────────────────────
-export const loginUser = async ({ email, password }) => {
-    const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-    })
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.msg || "Error al iniciar sesión")
-    return data
-}
-
-// ── REGISTRO MANUAL ───────────────────────────────────
-export const registerUser = async (formData) => {
-    const partes   = formData.nombre.trim().split(" ")
-    const nombre   = partes[0]
-    const apellido = partes.slice(1).join(" ") || "."
-
-    const response = await fetch(`${API_URL}/api/auth/registro`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            nombre,
-            apellido,
-            email:     formData.email,
-            password:  formData.password,
-            cedula:    formData.cedula,
-            celular:   formData.celular,
-            direccion: formData.direccion,
+export const authService = {
+    login: (email, password) =>
+        apiFetch("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({ email, password }),
         }),
-    })
-    const data = await response.json()
-    if (!response.ok) throw new Error(data.msg || "Error al registrarse")
-    return data
+
+    // Añadimos el método que le hace falta a tu formulario de registro
+    registerUser: (userData) =>
+        apiFetch("/api/auth/register", {
+            method: "POST",
+            body: JSON.stringify(userData),
+        }),
+
+    getPerfil: () =>
+        apiFetch("/api/user/perfil"),
+
+    logout: () => {
+        localStorage.removeItem("token")
+        sessionStorage.removeItem("token")
+    },
 }
+
+// Lo exportamos por defecto para quitar las llaves molestas al importar
+export default authService;

@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi"
-import { registerUser } from "../services/authService"
+// CORRECCIÓN: Importamos el servicio por defecto sin llaves { }
+import authService from "../services/authService"
 
 export function Register() {
     const [showPassword,        setShowPassword]        = useState(false)
@@ -38,8 +39,11 @@ export function Register() {
         setLoading(true)
 
         try {
-            const data = await registerUser(formData)
-            setSuccess(data.msg) // "Revisa tu correo para confirmar tu cuenta"
+            // CORRECCIÓN: Invocamos el método directamente desde el objeto authService
+            const data = await authService.registerUser(formData)
+            
+            // Usamos fallback por si el backend responde con .msg o .message
+            setSuccess(data.msg || data.message || "Revisa tu correo para confirmar tu cuenta")
 
             // Limpiar formulario tras registro exitoso
             setFormData({
@@ -281,3 +285,5 @@ export function Register() {
         </div>
     )
 }
+
+export default Register;
