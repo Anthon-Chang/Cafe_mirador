@@ -185,6 +185,24 @@ const deleteStaff = async (req, res) => {
     }
 }
 
+// =====================================
+// LISTAR STAFF (ADMIN) - AÑADIDO
+// =====================================
+export const getStaff = async (req, res) => {
+    try {
+        const usuarios = await Usuario.find({
+            rol: { $in: ['trabajador', 'supervisor', 'administrador'] }
+        })
+            .select("-password -token -__v")
+            .sort({ createdAt: -1 })
+
+        res.status(200).json(usuarios)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: `Error en el servidor - ${error}` })
+    }
+}
+
 export {
     getProfile,
     completarPerfil,

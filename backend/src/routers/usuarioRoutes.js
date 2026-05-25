@@ -4,7 +4,8 @@ import {
     completarPerfil,
     registerStaff,
     editStaff,
-    deleteStaff
+    deleteStaff,
+    getStaff
 } from "../controllers/userController.js"
 
 import {
@@ -14,39 +15,25 @@ import {
 
 const router = Router()
 
-// ======================================
-// TODAS LAS RUTAS REQUIEREN TOKEN
-// ======================================
+// Todas las rutas requieren token
 router.use(verificarTokenJWT)
 
-// ======================================
 // PERFIL (cualquier usuario autenticado)
-// ======================================
 router.get("/perfil", getProfile)
 
-// ======================================
 // COMPLETAR PERFIL (solo cliente)
-// ======================================
-router.put(
-    "/completar-perfil",
-    verificarNivel("cliente"), 
-    completarPerfil
-)
+router.put("/completar-perfil", verificarNivel("cliente"), completarPerfil)
 
-// ======================================
-// CREAR PERSONAL (desde administrador hacia arriba)
-// administrador y superadmin
-// ======================================
-router.post(
-    "/staff",
-    verificarNivel("administrador"),
-    registerStaff
-)
+// LISTAR STAFF (administrador+)
+router.get("/staff", verificarNivel("administrador"), getStaff)
 
-// Editar usuario (solo admin o superadmin)
+// CREAR PERSONAL (administrador+)
+router.post("/staff", verificarNivel("administrador"), registerStaff)
+
+// Editar usuario (administrador+)
 router.put("/staff/:id", verificarNivel("administrador"), editStaff)
 
-// Eliminar usuario (solo admin o superadmin)
+// Eliminar usuario (administrador+)
 router.delete("/staff/:id", verificarNivel("administrador"), deleteStaff)
 
 export default router
