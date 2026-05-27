@@ -1,6 +1,9 @@
 import Usuario from "../models/Usuarios.js"
 import { sendMailCredenciales } from "../helpers/sendMail.js"
 
+const ROLES_STAFF = ['trabajador', 'supervisor', 'administrador']
+const JERARQUIA   = ['cliente', 'trabajador', 'supervisor', 'administrador', 'superadmin']
+
 // =====================================
 // 1️⃣ PERFIL (usuario autenticado)
 // =====================================
@@ -16,30 +19,23 @@ const completarPerfil = async (req, res) => {
         const { cedula, celular, direccion } = req.body
 
         if (!cedula || !celular || !direccion)
-            return res.status(400).json({
-                msg: "Todos los datos de facturación son obligatorios"
-            })
+            return res.status(400).json({ msg: "Todos los datos de facturación son obligatorios" })
 
         const usuario = await Usuario.findById(req.usuario._id)
         if (!usuario)
             return res.status(404).json({ msg: "Usuario no encontrado" })
 
-        // Validar duplicados
-        const cedulaExistente = await Usuario.findOne({ cedula, _id: { $ne: req.usuario._id } })
-        if (cedulaExistente)
+        if (await Usuario.findOne({ cedula, _id: { $ne: req.usuario._id } }))
             return res.status(400).json({ msg: "La cédula ya pertenece a otro usuario" })
 
-        const celularExistente = await Usuario.findOne({ celular, _id: { $ne: req.usuario._id } })
-        if (celularExistente)
+        if (await Usuario.findOne({ celular, _id: { $ne: req.usuario._id } }))
             return res.status(400).json({ msg: "El celular ya pertenece a otro usuario" })
 
-        // Actualizar datos
-        usuario.cedula = cedula
-        usuario.celular = celular
+        usuario.cedula    = cedula
+        usuario.celular   = celular
         usuario.direccion = direccion
 
         await usuario.save()
-
         res.status(200).json({ msg: "Perfil actualizado correctamente" })
 
     } catch (error) {
@@ -55,11 +51,9 @@ const registerStaff = async (req, res) => {
     try {
         const { nombre, apellido, email, rol, cedula, celular, direccion } = req.body
 
-        // Validar campos obligatorios
-        if ([nombre, apellido, email, rol].includes("") || !nombre || !apellido || !email || !rol)
+        if (!nombre || !apellido || !email || !rol)
             return res.status(400).json({ msg: "Debes llenar todos los campos obligatorios" })
 
-        // Roles permitidos según quien crea el usuario
         const rolesPermitidos = req.usuarioRol === "superadmin"
             ? ['trabajador', 'supervisor', 'administrador']
             : ['trabajador', 'supervisor']
@@ -67,27 +61,59 @@ const registerStaff = async (req, res) => {
         if (!rolesPermitidos.includes(rol))
             return res.status(400).json({ msg: "Rol no permitido" })
 
-        // Verificar duplicados
-        if (await Usuario.findOne({ email: email.toLowerCase() }))
-            return res.status(400).json({ msg: "El email ya se encuentra registrado" })
-
         if (cedula && await Usuario.findOne({ cedula }))
             return res.status(400).json({ msg: "La cédula ya pertenece a otro usuario" })
 
         if (celular && await Usuario.findOne({ celular }))
             return res.status(400).json({ msg: "El celular ya pertenece a otro usuario" })
 
-        // Generar contraseña automática
+        // ── Caso A: el email ya existe (es cliente) ──────────────────
+        const usuarioExistente = await Usuario.findOne({ email: email.toLowerCase() })
+
+        if (usuarioExistente) {
+            // Si ya tiene un rol de staff, no permitir duplicar
+            if (ROLES_STAFF.some(r => (usuarioExistente.roles ?? []).includes(r)))
+                return res.status(400).json({
+                    msg: "Este usuario ya tiene un rol de trabajador asignado"
+                })
+
+            // Agregar el nuevo rol manteniendo 'cliente'
+            const rolesActualizados = [...new Set([...(usuarioExistente.roles ?? ['cliente']), rol])]
+            usuarioExistente.roles = rolesActualizados
+            // rol dominante se recalcula en el pre-hook
+
+            if (cedula)    usuarioExistente.cedula    = cedula
+            if (celular)   usuarioExistente.celular   = celular
+            if (direccion) usuarioExistente.direccion = direccion
+
+            await usuarioExistente.save()
+
+            return res.status(200).json({
+                msg: `Rol de ${rol} agregado al cliente existente`,
+                usuario: {
+                    _id:      usuarioExistente._id,
+                    nombre:   usuarioExistente.nombre,
+                    apellido: usuarioExistente.apellido,
+                    email:    usuarioExistente.email,
+                    roles:    usuarioExistente.roles,
+                    rol:      usuarioExistente.rol,
+                    cedula:   usuarioExistente.cedula,
+                    celular:  usuarioExistente.celular,
+                    direccion: usuarioExistente.direccion,
+                }
+            })
+        }
+
+        // ── Caso B: email nuevo → crear cuenta de staff ──────────────
         const generarPassword = () => "STAFF" + Math.random().toString(36).toUpperCase().slice(2, 6)
         const passwordGenerada = generarPassword()
 
-        // Crear nuevo usuario
         const nuevoUsuario = new Usuario({
             nombre,
             apellido,
             email: email.toLowerCase(),
-            password: passwordGenerada, // hash automático con pre-hook
-            rol,
+            password: passwordGenerada,
+            roles: ['cliente', rol],    // siempre tiene cliente + su rol de staff
             confirmarEmail: true,
             cedula,
             celular,
@@ -95,17 +121,17 @@ const registerStaff = async (req, res) => {
         })
 
         await nuevoUsuario.save()
-
-        // Enviar credenciales al correo del trabajador
         await sendMailCredenciales(email, passwordGenerada, nombre)
 
         res.status(201).json({
             msg: `${rol} creado correctamente y contraseña enviada al correo`,
             usuario: {
+                _id:       nuevoUsuario._id,
                 nombre,
                 apellido,
                 email,
-                rol,
+                roles:     nuevoUsuario.roles,
+                rol:       nuevoUsuario.rol,
                 cedula,
                 celular,
                 direccion
@@ -118,35 +144,36 @@ const registerStaff = async (req, res) => {
     }
 }
 
-// ===============================
-// EDITAR TRABAJADOR (ADMIN)
-// ===============================
-
+// =====================================
+// 4️⃣ EDITAR STAFF (ADMIN)
+// =====================================
 const editStaff = async (req, res) => {
     try {
-        const { id } = req.params // id del usuario a editar
-        const { nombre, apellido, rol, cedula, celular, direccion } = req.body
-
-        // Solo permitir roles válidos
-        if (rol && !['trabajador', 'supervisor', 'administrador'].includes(rol))
-            return res.status(400).json({ msg: "Rol no permitido" })
+        const { id } = req.params
+        const { nombre, apellido, roles, cedula, celular, direccion } = req.body
 
         const usuario = await Usuario.findById(id)
         if (!usuario)
             return res.status(404).json({ msg: "Usuario no encontrado" })
 
-        // Validaciones de duplicados
+        // Validar roles si se envían
+        if (roles) {
+            const rolesValidos = ['cliente', 'trabajador', 'supervisor', 'administrador']
+            if (!Array.isArray(roles) || !roles.every(r => rolesValidos.includes(r)))
+                return res.status(400).json({ msg: "Roles no válidos" })
+        }
+
         if (cedula && await Usuario.findOne({ cedula, _id: { $ne: id } }))
             return res.status(400).json({ msg: "La cédula ya pertenece a otro usuario" })
 
         if (celular && await Usuario.findOne({ celular, _id: { $ne: id } }))
             return res.status(400).json({ msg: "El celular ya pertenece a otro usuario" })
 
-        if (nombre) usuario.nombre = nombre
-        if (apellido) usuario.apellido = apellido
-        if (rol) usuario.rol = rol
-        if (cedula) usuario.cedula = cedula
-        if (celular) usuario.celular = celular
+        if (nombre)    usuario.nombre    = nombre
+        if (apellido)  usuario.apellido  = apellido
+        if (roles)     usuario.roles     = [...new Set(roles)]  // sin duplicados
+        if (cedula)    usuario.cedula    = cedula
+        if (celular)   usuario.celular   = celular
         if (direccion) usuario.direccion = direccion
 
         await usuario.save()
@@ -159,10 +186,9 @@ const editStaff = async (req, res) => {
     }
 }
 
-// ===============================
-// eliminar trabajador (ADMIN)
-// ===============================
-
+// =====================================
+// 5️⃣ ELIMINAR STAFF (ADMIN)
+// =====================================
 const deleteStaff = async (req, res) => {
     try {
         const { id } = req.params
@@ -171,12 +197,25 @@ const deleteStaff = async (req, res) => {
         if (!usuario)
             return res.status(404).json({ msg: "Usuario no encontrado" })
 
-        // Evitar borrar superadmins o a sí mismo
         if (usuario.rol === "superadmin")
             return res.status(403).json({ msg: "No puedes eliminar a un superadmin" })
 
-        await usuario.deleteOne()
+        // Si tiene rol de cliente además del de staff → solo quitar roles de staff
+        const tieneRolCliente = (usuario.roles ?? []).includes('cliente')
+        const rolesStaff      = (usuario.roles ?? []).filter(r => ROLES_STAFF.includes(r))
 
+        if (tieneRolCliente && rolesStaff.length > 0) {
+            // Conservar cuenta como cliente
+            usuario.roles = ['cliente']
+            await usuario.save()
+            return res.status(200).json({
+                msg: "Roles de staff eliminados. El usuario conserva su cuenta como cliente.",
+                usuario
+            })
+        }
+
+        // Sin rol de cliente → eliminar la cuenta completa
+        await usuario.deleteOne()
         res.status(200).json({ msg: "Usuario eliminado correctamente" })
 
     } catch (error) {
@@ -186,12 +225,13 @@ const deleteStaff = async (req, res) => {
 }
 
 // =====================================
-// LISTAR STAFF (ADMIN) - AÑADIDO
+// 6️⃣ LISTAR STAFF (ADMIN)
 // =====================================
 export const getStaff = async (req, res) => {
     try {
+        // Usuarios que tienen al menos un rol de staff
         const usuarios = await Usuario.find({
-            rol: { $in: ['trabajador', 'supervisor', 'administrador'] }
+            roles: { $in: ROLES_STAFF }
         })
             .select("-password -token -__v")
             .sort({ createdAt: -1 })
@@ -208,5 +248,5 @@ export {
     completarPerfil,
     registerStaff,
     editStaff,
-    deleteStaff
+    deleteStaff,
 }

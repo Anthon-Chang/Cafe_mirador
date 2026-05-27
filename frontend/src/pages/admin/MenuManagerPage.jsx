@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react"
 import {
-    FiPlus, FiSearch, FiBookOpen, FiUsers,
+    FiPlus, FiSearch, FiBookOpen, FiUsers, FiEdit2, FiTrash2,
     FiRefreshCw, FiGrid, FiList
 } from "react-icons/fi"
 
@@ -273,14 +273,24 @@ export function MenuManagerPage() {
                                                 </td>
                                                 <td className="px-6 py-3">
                                                     <div className="flex items-center gap-2">
-                                                        <button
-                                                            onClick={() => setProductoForm({ open: true, data: p })}
-                                                            className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                                                        ><FiSearch className="text-sm" /></button>
-                                                        <button
-                                                            onClick={() => pedir("deleteProducto", p, "¿Eliminar producto?", `Se eliminará "${p.nombre}" de forma permanente.`)}
-                                                            className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
-                                                        ><FiUsers className="text-sm" /></button>
+                                                        {/* Editar */}
+                                                        <div className="relative group/edit">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setProductoForm({ open: true, data: p })}
+                                                                className="p-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-colors"
+                                                            ><FiEdit2 className="text-sm" /></button>
+                                                            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[10px] font-sans font-semibold text-white opacity-0 group-hover/edit:opacity-100 transition-opacity shadow-lg">Editar</span>
+                                                        </div>
+                                                        {/* Eliminar */}
+                                                        <div className="relative group/del">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => pedir("deleteProducto", p, "¿Eliminar producto?", `Se eliminará "${p.nombre}" de forma permanente.`)}
+                                                                className="p-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                                                            ><FiTrash2 className="text-sm" /></button>
+                                                            <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[10px] font-sans font-semibold text-white opacity-0 group-hover/del:opacity-100 transition-opacity shadow-lg">Eliminar</span>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -359,11 +369,16 @@ export function MenuManagerPage() {
                         loading={loadStaff}
                         guardando={guardStaff}
                         onEdit={(u) => setStaffForm({ open: true, data: u })}
-                        onDelete={(u) => pedir(
-                            "deleteStaff", u,
-                            "¿Eliminar trabajador?",
-                            `Se eliminará a ${u.nombre} ${u.apellido} del sistema. Esta acción no se puede deshacer.`
-                        )}
+                        onDelete={(u) => {
+                                const tieneRolCliente = (u.roles ?? [u.rol]).includes("cliente")
+                                pedir(
+                                    "deleteStaff", u,
+                                    tieneRolCliente ? "¿Quitar roles de staff?" : "¿Eliminar trabajador?",
+                                    tieneRolCliente
+                                        ? `Se eliminarán los roles de staff de ${u.nombre} ${u.apellido}, pero su cuenta como cliente se conservará.`
+                                        : `Se eliminará a ${u.nombre} ${u.apellido} del sistema permanentemente.`
+                                )
+                            }}
                         onAscender={(u) => pedir(
                             "ascender", u,
                             "¿Ascender trabajador?",

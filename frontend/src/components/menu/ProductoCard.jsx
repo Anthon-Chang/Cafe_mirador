@@ -5,7 +5,8 @@ import { formatMoney } from "../../utils/formatters"
 export function ProductoCard({ producto, onEdit, onDelete }) {
     return (
         <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md transition-shadow group">
-            {/* Imagen */}
+
+            {/* ── Imagen ─────────────────────────────────────────── */}
             <div className="relative h-44 bg-slate-100 overflow-hidden">
                 {producto.imagen ? (
                     <img
@@ -28,26 +29,40 @@ export function ProductoCard({ producto, onEdit, onDelete }) {
                     {producto.disponible !== false ? "Disponible" : "No disponible"}
                 </span>
 
-                {/* Acciones hover */}
+                {/* ── Botones (aparecen al hacer hover sobre la card) ── */}
                 <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={() => onEdit(producto)}
-                        className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors shadow-sm"
-                        title="Editar"
-                    >
-                        <FiEdit2 className="text-sm" />
-                    </button>
-                    <button
-                        onClick={() => onDelete(producto)}
-                        className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-lg flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-colors shadow-sm"
-                        title="Eliminar"
-                    >
-                        <FiTrash2 className="text-sm" />
-                    </button>
+
+                    {/* Editar */}
+                    <div className="relative group/edit">
+                        <button
+                            type="button"
+                            onClick={() => onEdit(producto)}
+                            className="w-8 h-8 bg-primary/90 rounded-lg flex items-center justify-center text-white shadow-md transition-colors hover:bg-primary"
+                        >
+                            <FiEdit2 size={14} />
+                        </button>
+                        <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[10px] font-sans font-semibold text-white opacity-0 group-hover/edit:opacity-100 transition-opacity shadow-lg z-10">
+                            Editar
+                        </span>
+                    </div>
+
+                    {/* Eliminar */}
+                    <div className="relative group/del">
+                        <button
+                            type="button"
+                            onClick={() => onDelete(producto)}
+                            className="w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center text-red-400 shadow-md transition-colors hover:bg-red-50 hover:text-red-500"
+                        >
+                            <FiTrash2 size={14} />
+                        </button>
+                        <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap rounded-md bg-slate-800 px-2 py-1 text-[10px] font-sans font-semibold text-white opacity-0 group-hover/del:opacity-100 transition-opacity shadow-lg z-10">
+                            Eliminar
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* Info */}
+            {/* ── Info ───────────────────────────────────────────── */}
             <div className="p-4">
                 <div className="flex items-start justify-between gap-2 mb-1">
                     <h4 className="font-sans font-bold text-slate-800 text-sm leading-tight flex-1 line-clamp-1">
