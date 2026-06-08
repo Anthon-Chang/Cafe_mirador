@@ -71,16 +71,13 @@ const registerStaff = async (req, res) => {
         const usuarioExistente = await Usuario.findOne({ email: email.toLowerCase() })
 
         if (usuarioExistente) {
-            // Si ya tiene un rol de staff, no permitir duplicar
             if (ROLES_STAFF.some(r => (usuarioExistente.roles ?? []).includes(r)))
                 return res.status(400).json({
                     msg: "Este usuario ya tiene un rol de trabajador asignado"
                 })
 
-            // Agregar el nuevo rol manteniendo 'cliente'
             const rolesActualizados = [...new Set([...(usuarioExistente.roles ?? ['cliente']), rol])]
             usuarioExistente.roles = rolesActualizados
-            // rol dominante se recalcula en el pre-hook
 
             if (cedula)    usuarioExistente.cedula    = cedula
             if (celular)   usuarioExistente.celular   = celular
@@ -91,14 +88,14 @@ const registerStaff = async (req, res) => {
             return res.status(200).json({
                 msg: `Rol de ${rol} agregado al cliente existente`,
                 usuario: {
-                    _id:      usuarioExistente._id,
-                    nombre:   usuarioExistente.nombre,
-                    apellido: usuarioExistente.apellido,
-                    email:    usuarioExistente.email,
-                    roles:    usuarioExistente.roles,
-                    rol:      usuarioExistente.rol,
-                    cedula:   usuarioExistente.cedula,
-                    celular:  usuarioExistente.celular,
+                    _id:       usuarioExistente._id,
+                    nombre:    usuarioExistente.nombre,
+                    apellido:  usuarioExistente.apellido,
+                    email:     usuarioExistente.email,
+                    roles:     usuarioExistente.roles,
+                    rol:       usuarioExistente.rol,
+                    cedula:    usuarioExistente.cedula,
+                    celular:   usuarioExistente.celular,
                     direccion: usuarioExistente.direccion,
                 }
             })
@@ -113,7 +110,7 @@ const registerStaff = async (req, res) => {
             apellido,
             email: email.toLowerCase(),
             password: passwordGenerada,
-            roles: ['cliente', rol],    // siempre tiene cliente + su rol de staff
+            roles: ['cliente', rol],
             confirmarEmail: true,
             cedula,
             celular,
@@ -156,7 +153,6 @@ const editStaff = async (req, res) => {
         if (!usuario)
             return res.status(404).json({ msg: "Usuario no encontrado" })
 
-        // Validar roles si se envían
         if (roles) {
             const rolesValidos = ['cliente', 'trabajador', 'supervisor', 'administrador']
             if (!Array.isArray(roles) || !roles.every(r => rolesValidos.includes(r)))
@@ -171,7 +167,7 @@ const editStaff = async (req, res) => {
 
         if (nombre)    usuario.nombre    = nombre
         if (apellido)  usuario.apellido  = apellido
-        if (roles)     usuario.roles     = [...new Set(roles)]  // sin duplicados
+        if (roles)     usuario.roles     = [...new Set(roles)]
         if (cedula)    usuario.cedula    = cedula
         if (celular)   usuario.celular   = celular
         if (direccion) usuario.direccion = direccion
@@ -200,12 +196,10 @@ const deleteStaff = async (req, res) => {
         if (usuario.rol === "superadmin")
             return res.status(403).json({ msg: "No puedes eliminar a un superadmin" })
 
-        // Si tiene rol de cliente además del de staff → solo quitar roles de staff
         const tieneRolCliente = (usuario.roles ?? []).includes('cliente')
         const rolesStaff      = (usuario.roles ?? []).filter(r => ROLES_STAFF.includes(r))
 
         if (tieneRolCliente && rolesStaff.length > 0) {
-            // Conservar cuenta como cliente
             usuario.roles = ['cliente']
             await usuario.save()
             return res.status(200).json({
@@ -214,7 +208,6 @@ const deleteStaff = async (req, res) => {
             })
         }
 
-        // Sin rol de cliente → eliminar la cuenta completa
         await usuario.deleteOne()
         res.status(200).json({ msg: "Usuario eliminado correctamente" })
 
@@ -229,7 +222,6 @@ const deleteStaff = async (req, res) => {
 // =====================================
 export const getStaff = async (req, res) => {
     try {
-        // Usuarios que tienen al menos un rol de staff
         const usuarios = await Usuario.find({
             roles: { $in: ROLES_STAFF }
         })
@@ -243,10 +235,35 @@ export const getStaff = async (req, res) => {
     }
 }
 
+// =====================================
+// 7️⃣ BUSCAR CLIENTE POR CÉDULA (CAJERO)
+// =====================================
+const buscarPorCedula = async (req, res) => {
+    try {
+        const { cedula } = req.params
+
+        if (!cedula?.trim())
+            return res.status(400).json({ msg: "Cédula requerida" })
+
+        const usuario = await Usuario.findOne({ cedula: cedula.trim() })
+            .select("nombre apellido cedula celular direccion email")
+
+        if (!usuario)
+            return res.status(404).json({ msg: "Cliente no encontrado" })
+
+        res.status(200).json(usuario)
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: "Error al buscar cliente" })
+    }
+}
+
 export {
     getProfile,
     completarPerfil,
     registerStaff,
     editStaff,
     deleteStaff,
+    buscarPorCedula,
 }

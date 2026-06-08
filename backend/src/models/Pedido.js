@@ -6,10 +6,10 @@ const itemPedidoSchema = new mongoose.Schema({
         ref: "Producto",
         required: true
     },
-    nombre:    { type: String,  required: true },
-    precio:    { type: Number,  required: true },
-    cantidad:  { type: Number,  required: true, min: 1 },
-    subtotal:  { type: Number,  required: true }
+    nombre:   { type: String, required: true },
+    precio:   { type: Number, required: true },
+    cantidad: { type: Number, required: true, min: 1 },
+    subtotal: { type: Number, required: true }
 }, { _id: false })
 
 const pedidoSchema = new mongoose.Schema({
@@ -17,16 +17,29 @@ const pedidoSchema = new mongoose.Schema({
         type: Number,
         unique: true
     },
+
+    // ── Referencia al documento Usuario ────────────────────────
+    // null = consumidor final sin cuenta registrada
     cliente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Usuario",
-        default: null         // null = cliente en mostrador (sin cuenta)
+        default: null
     },
-    nombreCliente: {
+
+    // ── Snapshot histórico de datos del cliente ─────────────────
+    // Se guardan en el pedido para mantener el registro aunque
+    // el usuario cambie sus datos o sea eliminado posteriormente.
+    nombreCliente: { type: String, trim: true, default: "Consumidor Final" },
+    cedula:        { type: String, trim: true, default: null },
+    celular:       { type: String, trim: true, default: null },
+    direccion:     { type: String, trim: true, default: null },
+    email:         { type: String, trim: true, default: null },
+    metodoPago:    {
         type: String,
-        trim: true,
-        default: "Cliente mostrador"
+        enum: ["efectivo", "tarjeta", "transferencia"],
+        default: "efectivo"
     },
+
     items: [itemPedidoSchema],
     total: {
         type: Number,
@@ -41,7 +54,7 @@ const pedidoSchema = new mongoose.Schema({
     creadoPor: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Usuario",
-        required: true        // trabajador/admin que lo registró
+        required: true
     }
 }, { timestamps: true })
 

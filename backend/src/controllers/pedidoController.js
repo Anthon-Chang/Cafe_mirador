@@ -1,43 +1,142 @@
-import Pedido from "../models/Pedido.js"
+import Pedido   from "../models/Pedido.js"
+import Usuario  from "../models/Usuarios.js"
 import mongoose from "mongoose"
+
+// ─── Constante de valor vacío (frontend lo usa cuando el campo queda sin llenar) ──
+const VALOR_VACIO = "xxxxxx"
+const esVacio = (v) => !v || v.trim() === "" || v.trim() === VALOR_VACIO
 
 // ===============================
 // CREAR PEDIDO
 // ===============================
 const crearPedido = async (req, res) => {
     try {
-        const { nombreCliente, items } = req.body
+        const {
+            nombreCliente,
+            cedula,
+            celular,
+            direccion,
+            email,
+            items,
+            metodoPago,
+        } = req.body
 
+        // ── Validar items ────────────────────────────────────────────────
         if (!items || items.length === 0)
             return res.status(400).json({ msg: "El pedido debe tener al menos un ítem" })
 
-        // Validar que cada producto tenga un ObjectId válido
         for (const item of items) {
             if (!mongoose.Types.ObjectId.isValid(item.producto))
-                return res.status(400).json({ msg: `ID de producto inválido: "${item.producto}". Debe ser un ObjectId de MongoDB (24 caracteres hex)` })
+                return res.status(400).json({
+                    msg: `ID de producto inválido: "${item.producto}". Debe ser un ObjectId de MongoDB (24 caracteres hex)`
+                })
             if (!item.nombre || !item.precio || !item.cantidad)
                 return res.status(400).json({ msg: "Cada ítem requiere: producto, nombre, precio y cantidad" })
             if (item.precio <= 0 || item.cantidad < 1)
                 return res.status(400).json({ msg: "El precio debe ser > 0 y la cantidad >= 1" })
         }
 
-        // Calcular subtotales y total
+        // ── Calcular subtotales y total ──────────────────────────────────
         const itemsCalculados = items.map(item => ({
             ...item,
             subtotal: item.precio * item.cantidad
         }))
         const total = itemsCalculados.reduce((sum, i) => sum + i.subtotal, 0)
 
+        // ── Gestión del cliente ──────────────────────────────────────────
+        // Solo intentamos vincular/crear el cliente si la cédula tiene
+        // un valor real (no el placeholder "xxxxxx" ni vacío).
+        let clienteId = null
+
+        if (!esVacio(cedula)) {
+            const cedulaTrimmed = cedula.trim()
+
+            // 1. Buscar si ya existe un usuario con esa cédula
+            let usuario = await Usuario.findOne({ cedula: cedulaTrimmed })
+
+            if (usuario) {
+                // 2a. Ya existe → actualizar datos de contacto si llegaron con valor real
+                let modificado = false
+
+                if (!esVacio(celular)  && usuario.celular   !== celular.trim())  { usuario.celular   = celular.trim();   modificado = true }
+                if (!esVacio(direccion)&& usuario.direccion !== direccion.trim()){ usuario.direccion = direccion.trim(); modificado = true }
+
+                // Email es unique en el modelo; solo actualizamos si no hay conflicto
+                if (!esVacio(email)) {
+                    const emailTrimmed = email.trim().toLowerCase()
+                    if (usuario.email !== emailTrimmed) {
+                        const conflicto = await Usuario.findOne({ email: emailTrimmed, _id: { $ne: usuario._id } })
+                        if (!conflicto) { usuario.email = emailTrimmed; modificado = true }
+                    }
+                }
+
+                if (modificado) await usuario.save()
+
+            } else {
+                // 2b. No existe → crear el cliente con los datos disponibles.
+                // El modelo exige nombre, apellido, email y password.
+                // Separamos el nombreCliente en nombre + apellido.
+                let nombre   = nombreCliente?.trim() || "Sin nombre"
+                let apellido = "—"
+                if (!esVacio(nombreCliente)) {
+                    const partes = nombreCliente.trim().split(" ")
+                    nombre   = partes[0]
+                    apellido = partes.slice(1).join(" ") || "—"
+                }
+
+                // Generamos un email sintético si no vino uno real,
+                // para cumplir el requisito unique del modelo.
+                const emailFinal = !esVacio(email)
+                    ? email.trim().toLowerCase()
+                    : `cliente.${cedulaTrimmed}@mostrador.local`
+
+                // Verificamos que el email sintético o real no exista ya
+                const emailOcupado = await Usuario.findOne({ email: emailFinal })
+
+                if (!emailOcupado) {
+                    usuario = new Usuario({
+                        nombre,
+                        apellido,
+                        email:         emailFinal,
+                        cedula:        cedulaTrimmed,
+                        celular:       !esVacio(celular)   ? celular.trim()   : null,
+                        direccion:     !esVacio(direccion) ? direccion.trim() : null,
+                        password:      `pwd_${cedulaTrimmed}_${Date.now()}`, // hash automático por el pre-save hook
+                        roles:         ["cliente"],
+                        confirmarEmail:false,
+                    })
+                    await usuario.save()
+                } else {
+                    // El email ya existe pero con otra cédula: vinculamos al usuario existente
+                    usuario = emailOcupado
+                }
+            }
+
+            clienteId = usuario._id
+        }
+
+        // ── Guardar el pedido ────────────────────────────────────────────
         const pedido = new Pedido({
-            nombreCliente: nombreCliente || "Cliente mostrador",
-            items: itemsCalculados,
+            // Referencia al documento Usuario (null si es consumidor final)
+            cliente:       clienteId,
+
+            // Snapshot histórico: se guarda en el pedido aunque el usuario
+            // cambie sus datos después
+            nombreCliente: !esVacio(nombreCliente) ? nombreCliente.trim() : "Consumidor Final",
+            cedula:        !esVacio(cedula)        ? cedula.trim()        : null,
+            celular:       !esVacio(celular)       ? celular.trim()       : null,
+            direccion:     !esVacio(direccion)     ? direccion.trim()     : null,
+            email:         !esVacio(email)         ? email.trim()         : null,
+
+            items:         itemsCalculados,
             total,
-            creadoPor: req.usuario._id
+            metodoPago:    metodoPago || "efectivo",
+            creadoPor:     req.usuario._id,
         })
 
         await pedido.save()
 
-        // Emitir evento Socket.io a todos los clientes conectados
+        // Emitir evento Socket.io
         const io = req.app.get("io")
         if (io) io.emit("nuevoPedido", pedido)
 
@@ -60,6 +159,7 @@ const obtenerPedidosActivos = async (req, res) => {
         })
             .sort({ createdAt: -1 })
             .populate("creadoPor", "nombre apellido")
+            .populate("cliente",   "nombre apellido cedula email celular")
 
         res.status(200).json(pedidos)
 
@@ -82,6 +182,7 @@ const obtenerTodosPedidos = async (req, res) => {
             .sort({ createdAt: -1 })
             .limit(Number(limite))
             .populate("creadoPor", "nombre apellido")
+            .populate("cliente",   "nombre apellido cedula email celular")
 
         res.status(200).json(pedidos)
 
@@ -115,7 +216,6 @@ const actualizarEstadoPedido = async (req, res) => {
         if (!pedido)
             return res.status(404).json({ msg: "Pedido no encontrado" })
 
-        // Emitir actualización en tiempo real
         const io = req.app.get("io")
         if (io) io.emit("pedidoActualizado", pedido)
 
@@ -134,51 +234,43 @@ const obtenerEstadisticas = async (req, res) => {
     try {
         const ahora = new Date()
 
-        // Inicio del día actual (medianoche local)
         const inicioDia = new Date(ahora)
         inicioDia.setHours(0, 0, 0, 0)
 
-        // Inicio de la semana (lunes)
         const iniciSemana = new Date(ahora)
-        const diaSemana = iniciSemana.getDay()           // 0=dom, 1=lun…
+        const diaSemana = iniciSemana.getDay()
         const diffLunes = (diaSemana === 0 ? -6 : 1 - diaSemana)
         iniciSemana.setDate(iniciSemana.getDate() + diffLunes)
         iniciSemana.setHours(0, 0, 0, 0)
 
-        // Inicio del mes
         const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1)
 
-        // Solo pedidos completados para ingresos
         const filtroBase = { estado: "completado" }
 
         const [dia, semana, mes, activos] = await Promise.all([
-            // Ingresos del día
             Pedido.aggregate([
                 { $match: { ...filtroBase, createdAt: { $gte: inicioDia } } },
                 { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } }
             ]),
-            // Ingresos de la semana
             Pedido.aggregate([
                 { $match: { ...filtroBase, createdAt: { $gte: iniciSemana } } },
                 { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } }
             ]),
-            // Ingresos del mes
             Pedido.aggregate([
                 { $match: { ...filtroBase, createdAt: { $gte: inicioMes } } },
                 { $group: { _id: null, total: { $sum: "$total" }, count: { $sum: 1 } } }
             ]),
-            // Pedidos activos (pendiente + procesando)
             Pedido.countDocuments({ estado: { $in: ["pendiente", "procesando"] } })
         ])
 
         res.status(200).json({
-            ingresosDia:     dia[0]?.total     ?? 0,
-            ingresosSemana:  semana[0]?.total  ?? 0,
-            ingresosMes:     mes[0]?.total     ?? 0,
-            pedidosDia:      dia[0]?.count     ?? 0,
-            pedidosSemana:   semana[0]?.count  ?? 0,
-            pedidosMes:      mes[0]?.count     ?? 0,
-            pedidosActivos:  activos
+            ingresosDia:    dia[0]?.total    ?? 0,
+            ingresosSemana: semana[0]?.total ?? 0,
+            ingresosMes:    mes[0]?.total    ?? 0,
+            pedidosDia:     dia[0]?.count    ?? 0,
+            pedidosSemana:  semana[0]?.count ?? 0,
+            pedidosMes:     mes[0]?.count    ?? 0,
+            pedidosActivos: activos
         })
 
     } catch (error) {
@@ -187,14 +279,13 @@ const obtenerEstadisticas = async (req, res) => {
     }
 }
 
-
 // ===============================
 // ACTUALIZAR PEDIDO COMPLETO
 // ===============================
 const actualizarPedido = async (req, res) => {
     try {
         const { id } = req.params
-        const { nombreCliente, items } = req.body
+        const { nombreCliente, cedula, celular, direccion, email, items } = req.body
 
         if (!mongoose.Types.ObjectId.isValid(id))
             return res.status(400).json({ msg: "ID no válido" })
@@ -206,7 +297,6 @@ const actualizarPedido = async (req, res) => {
         if (["completado", "cancelado"].includes(pedido.estado))
             return res.status(400).json({ msg: `No se puede editar un pedido ${pedido.estado}` })
 
-        // Si envían items, recalcular subtotales y total
         if (items && items.length > 0) {
             for (const item of items) {
                 if (!mongoose.Types.ObjectId.isValid(item.producto))
@@ -221,13 +311,16 @@ const actualizarPedido = async (req, res) => {
                 ...item,
                 subtotal: item.precio * item.cantidad
             }))
-            const total = itemsCalculados.reduce((sum, i) => sum + i.subtotal, 0)
-
-            pedido.items = itemsCalculados
-            pedido.total = total
+            pedido.items  = itemsCalculados
+            pedido.total  = itemsCalculados.reduce((sum, i) => sum + i.subtotal, 0)
         }
 
-        if (nombreCliente) pedido.nombreCliente = nombreCliente
+        // Actualizar snapshot de datos del cliente en el pedido
+        if (!esVacio(nombreCliente)) pedido.nombreCliente = nombreCliente.trim()
+        if (!esVacio(cedula))        pedido.cedula        = cedula.trim()
+        if (!esVacio(celular))       pedido.celular       = celular.trim()
+        if (!esVacio(direccion))     pedido.direccion     = direccion.trim()
+        if (!esVacio(email))         pedido.email         = email.trim().toLowerCase()
 
         await pedido.save()
 
