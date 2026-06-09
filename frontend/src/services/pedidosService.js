@@ -12,6 +12,9 @@ export const pedidosService = {
     getEstadisticas: () =>
         apiFetch("/api/pedidos/estadisticas"),
 
+    getAnaliticas: () =>
+    apiFetch("/api/pedidos/analiticas"),
+
     crear: (datos) =>
         apiFetch("/api/pedidos", {
             method: "POST",

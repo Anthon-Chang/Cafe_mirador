@@ -361,6 +361,169 @@ const eliminarPedido = async (req, res) => {
     }
 }
 
+// ===============================
+// ANALÍTICAS — Dashboard completo
+// GET /api/pedidos/analiticas
+// ===============================
+
+const obtenerAnaliticas = async (req, res) => {
+    try {
+        const ahora    = new Date()
+        const hace7    = new Date(ahora)
+        hace7.setDate(hace7.getDate() - 6)
+        hace7.setHours(0, 0, 0, 0)
+
+        const hace30   = new Date(ahora)
+        hace30.setDate(hace30.getDate() - 29)
+        hace30.setHours(0, 0, 0, 0)
+
+        const [
+            ingresosDiarios,
+            porEstado,
+            porMetodoPago,
+            pedidosPorHora,
+        ] = await Promise.all([
+
+            // ── 1. Ingresos de los últimos 30 días (completados) ─────────
+            Pedido.aggregate([
+                {
+                    $match: {
+                        estado:    "completado",
+                        createdAt: { $gte: hace30 },
+                    },
+                },
+                {
+                    $group: {
+                        _id: {
+                            $dateToString: {
+                                format: "%Y-%m-%d",
+                                date:   "$createdAt",
+                                timezone: "America/Guayaquil",
+                            },
+                        },
+                        ingresos: { $sum: "$total" },
+                        pedidos:  { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+
+            // ── 2. Conteo por estado (últimos 30 días, todos los estados) ─
+            Pedido.aggregate([
+                {
+                    $match: {
+                        createdAt: { $gte: hace30 },
+                    },
+                },
+                {
+                    $group: {
+                        _id:   "$estado",
+                        total: { $sum: 1 },
+                    },
+                },
+            ]),
+
+            // ── 3. Distribución por método de pago (completados, 30 días) ─
+            Pedido.aggregate([
+                {
+                    $match: {
+                        estado:    "completado",
+                        createdAt: { $gte: hace30 },
+                    },
+                },
+                {
+                    $group: {
+                        _id:      "$metodoPago",
+                        total:    { $sum: 1 },
+                        ingresos: { $sum: "$total" },
+                    },
+                },
+            ]),
+
+            // ── 4. Pedidos por hora del día (últimos 7 días, completados) ─
+            Pedido.aggregate([
+                {
+                    $match: {
+                        estado:    "completado",
+                        createdAt: { $gte: hace7 },
+                    },
+                },
+                {
+                    $group: {
+                        _id:     {
+                            $hour: {
+                                date:     "$createdAt",
+                                timezone: "America/Guayaquil",
+                            },
+                        },
+                        pedidos: { $sum: 1 },
+                    },
+                },
+                { $sort: { _id: 1 } },
+            ]),
+        ])
+
+        // ── Rellenar días faltantes en ingresos diarios ──────────────────
+        const diasMap = {}
+        ingresosDiarios.forEach(d => { diasMap[d._id] = d })
+
+        const diasCompletos = []
+        for (let i = 0; i < 30; i++) {
+            const d   = new Date(hace30)
+            d.setDate(d.getDate() + i)
+            const key = d.toISOString().slice(0, 10)
+            diasCompletos.push({
+                fecha:    key,
+                // Etiqueta corta para el eje X: "12 Jun"
+                label:    d.toLocaleDateString("es-EC", { day: "2-digit", month: "short" }),
+                ingresos: diasMap[key]?.ingresos ?? 0,
+                pedidos:  diasMap[key]?.pedidos  ?? 0,
+            })
+        }
+
+        // ── Normalizar estado ────────────────────────────────────────────
+        const ESTADOS = ["pendiente", "procesando", "completado", "cancelado"]
+        const estadoMap = {}
+        porEstado.forEach(e => { estadoMap[e._id] = e.total })
+        const estadosNorm = ESTADOS.map(e => ({
+            estado: e,
+            label:  e.charAt(0).toUpperCase() + e.slice(1),
+            total:  estadoMap[e] ?? 0,
+        }))
+
+        // ── Normalizar método de pago ────────────────────────────────────
+        const METODOS = ["efectivo", "tarjeta", "transferencia"]
+        const metodoMap = {}
+        porMetodoPago.forEach(m => { metodoMap[m._id] = m })
+        const metodosNorm = METODOS.map(m => ({
+            metodo:   m,
+            label:    m === "efectivo" ? "Efectivo" : m === "tarjeta" ? "Tarjeta" : "Transferencia",
+            total:    metodoMap[m]?.total    ?? 0,
+            ingresos: metodoMap[m]?.ingresos ?? 0,
+        }))
+
+        // ── Normalizar horas (0-23) ──────────────────────────────────────
+        const horaMap = {}
+        pedidosPorHora.forEach(h => { horaMap[h._id] = h.pedidos })
+        const horasNorm = Array.from({ length: 24 }, (_, i) => ({
+            hora:    i,
+            label:   `${String(i).padStart(2, "0")}:00`,
+            pedidos: horaMap[i] ?? 0,
+        }))
+
+        res.status(200).json({
+            ingresosDiarios: diasCompletos,
+            porEstado:       estadosNorm,
+            porMetodoPago:   metodosNorm,
+            porHora:         horasNorm,
+        })
+
+    } catch (error) {
+        console.error("ERROR ANALÍTICAS:", error)
+        res.status(500).json({ msg: "❌ Error en el servidor", detalle: error.message })
+    }
+}
+
 export {
     crearPedido,
     obtenerPedidosActivos,
@@ -368,5 +531,6 @@ export {
     actualizarEstadoPedido,
     actualizarPedido,
     eliminarPedido,
-    obtenerEstadisticas
+    obtenerEstadisticas,
+    obtenerAnaliticas,
 }

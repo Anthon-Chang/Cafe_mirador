@@ -6,12 +6,21 @@ import {
     actualizarEstadoPedido,
     actualizarPedido,
     eliminarPedido,
-    obtenerEstadisticas
+    obtenerEstadisticas,
+    obtenerAnaliticas
 } from "../controllers/pedidoController.js"
 
 import { verificarTokenJWT, verificarNivel } from "../middlewares/JWT.js"
 
 const router = express.Router()
+
+// 📊 Analíticas detalladas → mínimo trabajador
+router.get(
+    "/analiticas",
+    verificarTokenJWT,
+    verificarNivel("trabajador"),
+    obtenerAnaliticas
+)
 
 // 📊 Estadísticas del dashboard → mínimo trabajador
 router.get(

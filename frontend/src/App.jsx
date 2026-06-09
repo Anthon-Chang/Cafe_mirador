@@ -21,6 +21,7 @@ import MenuManagerPage        from "./pages/admin/MenuManagerPage"
 import VentaPage              from "./pages/admin/VentaPage"
 import SeleccionProductosPage from "./pages/admin/SeleccionProductosPage"
 import GestionPedidosPage     from "./pages/admin/GestionPedidosPage"
+import AnaliticasPage         from "./pages/admin/AnaliticasPage"
 
 function App() {
     return (
@@ -47,8 +48,8 @@ function App() {
                         <Route path="venta"           element={<VentaPage />}             />
                         <Route path="venta/productos" element={<SeleccionProductosPage />} />
                         <Route path="pedidos"         element={<GestionPedidosPage />}    />
+                        <Route path="analiticas"      element={<AnaliticasPage />} />
                         {/* Próximas páginas:
-                        <Route path="analiticas" element={<AnaliticasPage />} />
                         <Route path="perfil"     element={<PerfilPage />}     /> */}
                     </Route>
 
