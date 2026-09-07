@@ -1,6 +1,8 @@
 import { Router } from "express"
 import {
     getProfile,
+    actualizarPerfilPropio,
+    cambiarPassword,
     completarPerfil,
     registerStaff,
     editStaff,
@@ -9,18 +11,17 @@ import {
     buscarPorCedula,
 } from "../controllers/userController.js"
 
-import {
-    verificarTokenJWT,
-    verificarNivel
-} from "../middlewares/JWT.js"
+import { verificarTokenJWT, verificarNivel } from "../middlewares/JWT.js"
 
 const router = Router()
 
-// Todas las rutas requieren token
+
 router.use(verificarTokenJWT)
 
 // PERFIL (cualquier usuario autenticado)
 router.get("/perfil", getProfile)
+router.put("/perfil", actualizarPerfilPropio)
+router.put("/perfil/password", cambiarPassword)
 
 // COMPLETAR PERFIL (solo cliente)
 router.put("/completar-perfil", verificarNivel("cliente"), completarPerfil)

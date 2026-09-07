@@ -1,5 +1,8 @@
+// backend/src/controllers/userController.js
 import Usuario from "../models/Usuarios.js"
+import { v2 as cloudinary } from "cloudinary"
 import { sendMailCredenciales } from "../helpers/sendMail.js"
+import { subirBase64ConIdCloudinary } from "../helpers/uploadCloudinary.js"
 
 const ROLES_STAFF = ['trabajador', 'supervisor', 'administrador']
 const JERARQUIA   = ['cliente', 'trabajador', 'supervisor', 'administrador', 'superadmin']
@@ -9,6 +12,94 @@ const JERARQUIA   = ['cliente', 'trabajador', 'supervisor', 'administrador', 'su
 // =====================================
 const getProfile = (req, res) => {
     res.status(200).json(req.usuario)
+}
+
+// =====================================
+// 🆕 ACTUALIZAR MI PROPIO PERFIL
+// =====================================
+const actualizarPerfilPropio = async (req, res) => {
+    try {
+        const { nombre, apellido, celular, direccion, avatarBase64 } = req.body
+
+        const usuario = await Usuario.findById(req.usuario._id)
+        if (!usuario)
+            return res.status(404).json({ msg: "Usuario no encontrado" })
+
+        if (celular && await Usuario.findOne({ celular, _id: { $ne: usuario._id } }))
+            return res.status(400).json({ msg: "El celular ya pertenece a otro usuario" })
+
+        if (nombre?.trim())    usuario.nombre    = nombre.trim()
+        if (apellido?.trim())  usuario.apellido  = apellido.trim()
+        if (celular?.trim())   usuario.celular   = celular.trim()
+        if (direccion?.trim()) usuario.direccion = direccion.trim()
+
+        if (avatarBase64) {
+            if (usuario.avatarID) {
+                await cloudinary.uploader.destroy(usuario.avatarID)
+            }
+            const { secure_url, public_id } = await subirBase64ConIdCloudinary(avatarBase64, "Perfiles")
+            usuario.avatar   = secure_url
+            usuario.avatarID = public_id
+        }
+
+        await usuario.save()
+
+        res.status(200).json({
+            msg: "Perfil actualizado correctamente",
+            usuario: {
+                _id:       usuario._id,
+                nombre:    usuario.nombre,
+                apellido:  usuario.apellido,
+                email:     usuario.email,
+                rol:       usuario.rol,
+                roles:     usuario.roles,
+                cedula:    usuario.cedula,
+                celular:   usuario.celular,
+                direccion: usuario.direccion,
+                avatar:    usuario.avatar,
+                createdAt: usuario.createdAt,
+            }
+        })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: "Error al actualizar el perfil" })
+    }
+}
+
+// =====================================
+// 🆕 CAMBIAR MI CONTRASEÑA
+// =====================================
+const cambiarPassword = async (req, res) => {
+    try {
+        const { passwordActual, passwordNueva, confirmarPassword } = req.body
+
+        if (!passwordActual || !passwordNueva || !confirmarPassword)
+            return res.status(400).json({ msg: "Debes llenar todos los campos" })
+
+        if (passwordNueva !== confirmarPassword)
+            return res.status(400).json({ msg: "Las contraseñas nuevas no coinciden" })
+
+        if (passwordNueva.length < 6)
+            return res.status(400).json({ msg: "La nueva contraseña debe tener al menos 6 caracteres" })
+
+        const usuario = await Usuario.findById(req.usuario._id)
+        if (!usuario)
+            return res.status(404).json({ msg: "Usuario no encontrado" })
+
+        const passwordCorrecto = await usuario.matchPassword(passwordActual)
+        if (!passwordCorrecto)
+            return res.status(401).json({ msg: "La contraseña actual es incorrecta" })
+
+        usuario.password = passwordNueva
+        await usuario.save()
+
+        res.status(200).json({ msg: "Contraseña actualizada correctamente" })
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ msg: "Error al cambiar la contraseña" })
+    }
 }
 
 // =====================================
@@ -67,7 +158,6 @@ const registerStaff = async (req, res) => {
         if (celular && await Usuario.findOne({ celular }))
             return res.status(400).json({ msg: "El celular ya pertenece a otro usuario" })
 
-        // ── Caso A: el email ya existe (es cliente) ──────────────────
         const usuarioExistente = await Usuario.findOne({ email: email.toLowerCase() })
 
         if (usuarioExistente) {
@@ -101,7 +191,6 @@ const registerStaff = async (req, res) => {
             })
         }
 
-        // ── Caso B: email nuevo → crear cuenta de staff ──────────────
         const generarPassword = () => "STAFF" + Math.random().toString(36).toUpperCase().slice(2, 6)
         const passwordGenerada = generarPassword()
 
@@ -261,6 +350,8 @@ const buscarPorCedula = async (req, res) => {
 
 export {
     getProfile,
+    actualizarPerfilPropio,
+    cambiarPassword,
     completarPerfil,
     registerStaff,
     editStaff,

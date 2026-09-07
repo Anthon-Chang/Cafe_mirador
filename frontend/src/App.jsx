@@ -22,6 +22,7 @@ import VentaPage              from "./pages/admin/VentaPage"
 import SeleccionProductosPage from "./pages/admin/SeleccionProductosPage"
 import GestionPedidosPage     from "./pages/admin/GestionPedidosPage"
 import AnaliticasPage         from "./pages/admin/AnaliticasPage"
+import PerfilPage             from "./pages/admin/PerfilPage"
 
 function App() {
     return (
@@ -49,8 +50,7 @@ function App() {
                         <Route path="venta/productos" element={<SeleccionProductosPage />} />
                         <Route path="pedidos"         element={<GestionPedidosPage />}    />
                         <Route path="analiticas"      element={<AnaliticasPage />} />
-                        {/* Próximas páginas:
-                        <Route path="perfil"     element={<PerfilPage />}     /> */}
+                        <Route path="perfil"     element={<PerfilPage />}     />
                     </Route>
 
                     <Route path="*" element={<NotFound />} />

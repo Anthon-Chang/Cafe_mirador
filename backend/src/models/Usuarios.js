@@ -46,7 +46,16 @@ const UsuarioSchema = new Schema({
         trim: true,
         default: null
     },
-
+    avatar: {
+        type: String,
+        trim: true,
+        default: null
+    },
+    avatarID: {
+        type: String,
+        trim: true,
+        default: null
+    },
     // ── Roles múltiples ──────────────────────────────────────────
     // Un usuario puede tener varios roles simultáneamente.
     // Ej: ['cliente', 'trabajador']
@@ -76,7 +85,8 @@ const UsuarioSchema = new Schema({
     token: {
         type: String,
         default: null
-    }
+    },
+    
 }, {
     timestamps: true
 });

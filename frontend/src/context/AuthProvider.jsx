@@ -1,3 +1,4 @@
+// frontend/src/context/AuthProvider.jsx
 import PropTypes from "prop-types"
 import { useState, useEffect, useCallback } from "react"
 import { AuthContext } from "./AuthContext"
@@ -28,7 +29,7 @@ export function AuthProvider({ children }) {
         const data = await authService.login(email, password)
         const storage = recordar ? localStorage : sessionStorage
         storage.setItem("token", data.token)
-        setUsuario(data.usuario)
+        await cargarPerfil()   // 🆕 trae el perfil completo (avatar, cédula, roles, createdAt...)
         return data
     }
 
@@ -38,8 +39,13 @@ export function AuthProvider({ children }) {
         navigate?.("/login")
     }
 
+    // 🆕 Actualiza el usuario en memoria tras editar el perfil (sin refetch)
+    const actualizarUsuario = (datosUsuario) => {
+        setUsuario(prev => ({ ...prev, ...datosUsuario }))
+    }
+
     return (
-        <AuthContext.Provider value={{ usuario, loading, login, logout, cargarPerfil }}>
+        <AuthContext.Provider value={{ usuario, loading, login, logout, cargarPerfil, actualizarUsuario }}>
             {children}
         </AuthContext.Provider>
     )

@@ -73,8 +73,17 @@ export function DashboardSidebar({ open, onClose }) {
 
                 <div className="p-4 border-t border-slate-800">
                     <div className="flex items-center gap-3 px-3 py-2">
-                        <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0">
-                            <FiUser className="text-primary text-lg" />
+                        <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40
+                                        flex items-center justify-center shrink-0 overflow-hidden">
+                            {usuario?.avatar ? (
+                                <img
+                                    src={usuario.avatar}
+                                    alt={nombreCompleto(usuario)}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <FiUser className="text-primary text-lg" />
+                            )}
                         </div>
                         <div className="flex flex-col min-w-0">
                             <p className="text-sm font-sans font-semibold text-white truncate">
