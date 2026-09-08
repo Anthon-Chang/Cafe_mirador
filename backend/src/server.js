@@ -10,6 +10,7 @@ import authRoutes from './routers/authRoutes.js'
 import usuarioRoutes from './routers/usuarioRoutes.js'
 import productoRoutes from './routers/productoRoutes.js'
 import pedidoRoutes from './routers/pedidoRoutes.js'
+import gastoRoutes from './routers/gastoRoutes.js'
 
 // Inicializaciones
 const app = express()
@@ -63,5 +64,5 @@ app.use('/api/auth',      authRoutes)
 app.use('/api/user',      usuarioRoutes)
 app.use('/api/productos', productoRoutes)
 app.use('/api/pedidos',   pedidoRoutes)
-
+app.use('/api/gastos',    gastoRoutes)
 export { httpServer as default, app }
