@@ -27,7 +27,7 @@ function LoadingState() {
 
 // Placeholder invisible con el mismo tamaño que un botón de acción (p-1.5 + ícono text-sm)
 function AccionSpacer() {
-    return <span className="w-[30px] h-[30px] shrink-0" aria-hidden="true" />
+    return <span className="w-7.5 h-7.5 shrink-0" aria-hidden="true" />
 }
 
 export function GastosTable({ gastos, loading, guardando, onEdit, onToggle, onDelete }) {
@@ -82,7 +82,7 @@ export function GastosTable({ gastos, loading, guardando, onEdit, onToggle, onDe
                                         {g.tipo === "fijo" ? (
                                             <button type="button" onClick={() => onToggle(g)} disabled={guardando}
                                                 title={g.activo ? "Desactivar" : "Reactivar"}
-                                                className={`p-1.5 w-[30px] h-[30px] flex items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
+                                                className={`p-1.5 w-7.5 h-7.5 flex items-center justify-center rounded-lg transition-colors disabled:opacity-50 ${
                                                     g.activo
                                                         ? "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20"
                                                         : "bg-green-500/10 text-green-600 hover:bg-green-500/20"
@@ -93,11 +93,11 @@ export function GastosTable({ gastos, loading, guardando, onEdit, onToggle, onDe
                                             <AccionSpacer />
                                         )}
                                         <button type="button" onClick={() => onEdit(g)} disabled={guardando}
-                                            className="p-1.5 w-[30px] h-[30px] flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50">
+                                            className="p-1.5 w-7.5 h-7.5 flex items-center justify-center rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-50">
                                             <FiEdit2 className="text-sm" />
                                         </button>
                                         <button type="button" onClick={() => onDelete(g)} disabled={guardando}
-                                            className="p-1.5 w-[30px] h-[30px] flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50">
+                                            className="p-1.5 w-7.5 h-7.5 flex items-center justify-center rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors disabled:opacity-50">
                                             <FiTrash2 className="text-sm" />
                                         </button>
                                     </div>
